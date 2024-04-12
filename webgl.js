@@ -158,9 +158,10 @@ export function set (name, value, kind = 'float') {
 
 export function setShader (shader, skipUniforms = false) {
   const gl = getGlContext()
+  const changedShader = currentShader !== shader
   currentShader = shader
   gl.useProgram(shader)
-  if (!skipUniforms) {
+  if (changedShader && !skipUniforms) {
     set('color', [1, 1, 1, 1])
     set('viewMatrix', [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
     set('projectionMatrix', [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
