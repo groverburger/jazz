@@ -23,7 +23,7 @@ const defaultVertexFormat = [
   }
 ]
 
-const defaultVertSource = `
+export const defaultVertSource = `
 attribute vec4 vertexPosition;
 attribute vec2 vertexTexture;
 attribute vec3 vertexNormal;
@@ -45,7 +45,8 @@ void main() {
   gl_Position = projectionMatrix * viewPosition;
 }
 `
-const defaultFragSource = `
+
+export const defaultFragSource = `
 precision mediump float;
 
 uniform sampler2D texture;
@@ -62,7 +63,7 @@ void main() {
 
 export let defaultShader
 
-const shadedDefaultFragSource = `
+export const shadedDefaultFragSource = `
 precision mediump float;
 
 uniform sampler2D texture;
@@ -93,7 +94,6 @@ export function setGlContext (gl) {
     shadedDefaultFragSource
   )
   setShader(defaultShader)
-  set('color', [1, 1, 1, 1])
 }
 
 export function getGlContext () {
@@ -156,10 +156,16 @@ export function set (name, value, kind = 'float') {
   gl.uniform1f(uniformLocation, value)
 }
 
-export function setShader (shader) {
+export function setShader (shader, skipUniforms = false) {
   const gl = getGlContext()
   currentShader = shader
   gl.useProgram(shader)
+  if (!skipUniforms) {
+    set('color', [1, 1, 1, 1])
+    set('viewMatrix', [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
+    set('projectionMatrix', [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
+    set('modelMatrix', [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
+  }
 }
 
 export function getShader () {
@@ -334,6 +340,13 @@ export function drawLine (p1, p2, w = 1) {
  * fragment shader sources.
  */
 export function createShader (vsSource, fsSource) {
+  // To make it easier to write simple fragment shaders, this allows
+  // you to pass in a single argument instead
+  if (vsSource && !fsSource) {
+    fsSource = vsSource
+    vsSource = defaultVertSource
+  }
+
   const gl = getGlContext()
   function compileShader (what, source) {
     const shader = gl.createShader(what)
