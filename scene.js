@@ -182,23 +182,6 @@ export default class Scene {
     ctx.restore()
   }
 
-  clearScreen () {
-    const width = game.getWidth()
-    const height = game.getHeight()
-    const { ctx } = game
-    if (document.querySelector('#canvas3D')) {
-      // Webgl is enabled, so fill color on the webgl canvas instead of the 2d canvas
-      gfx.clearScreen()
-
-      // Clear the 2d canvas
-      ctx.clearRect(0, 0, width, height)
-    } else {
-      // No webgl, fill the 2d canvas with background color
-      ctx.fillStyle = '#4488ff'
-      ctx.fillRect(0, 0, width, height)
-    }
-  }
-
   // Adds the given object instance to the thing list
   addThing(thing) {
     if (!(thing instanceof Thing)) {

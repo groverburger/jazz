@@ -192,7 +192,7 @@ function frame (frameTime) {
   let times = 0
   let rerender = false
   while (accumulator >= 1 && times < 5) {
-    rerender = update() || rerender
+    rerender = updateHandler() || rerender
     gameTime = frameTime
     accumulator -= 1
     times += 1
@@ -201,14 +201,16 @@ function frame (frameTime) {
 
   // Render only if we updated
   if (rerender || isFramerateUncapped) {
-    draw()
+    if (document.hasFocus()) {
+      draw()
+    }
     frameCount += 1
   }
 
   requestAnimationFrame(frame)
 }
 
-function update () {
+function updateHandler () {
   handleCanvasResize()
   handleTabbingInAndOut()
   handleSceneChange()
@@ -230,8 +232,8 @@ function update () {
   }
 
   if (scene) {
-    scene.clearScreen()
-    scene.update()
+    clearScreen()
+    update()
   }
   soundmanager.update()
 
@@ -249,9 +251,27 @@ function update () {
   return true
 }
 
+function update () {
+  scene?.update()
+}
+
 function draw () {
-  if (!document.hasFocus()) { return }
   scene?.draw()
+}
+
+function clearScreen () {
+  if (document.querySelector('#canvas3D')) {
+    // Webgl is enabled, so fill color on the webgl canvas instead of
+    // the 2d canvas
+    gfx.clearScreen()
+
+    // Clear the 2d canvas
+    ctx.clearRect(0, 0, width, height)
+  } else {
+    // No webgl, fill the 2d canvas with background color
+    ctx.fillStyle = '#4488ff'
+    ctx.fillRect(0, 0, width, height)
+  }
 }
 
 function loseFocus () {
@@ -537,6 +557,20 @@ export function getPreventLeave () {
 export function setPreventLeave (pl) {
   preventLeave = pl
   return preventLeave
+}
+
+export function setCustomUpdateFunction (func) {
+  if (func) {
+    update = func
+  }
+  return update
+}
+
+export function setCustomDrawFunction (func) {
+  if (func) {
+    draw = func
+  }
+  return draw
 }
 
 /******************************************************************************
