@@ -559,6 +559,7 @@ export function setPreventLeave (pl) {
   return preventLeave
 }
 
+/*
 export function setCustomUpdateFunction (func) {
   if (func) {
     update = func
@@ -572,6 +573,7 @@ export function setCustomDrawFunction (func) {
   }
   return draw
 }
+*/
 
 /******************************************************************************
     Thing management
