@@ -606,6 +606,11 @@ export function getThingsNearXywh (x, y, w, h) {
   return scene.spatialHash.query(x, y, w, h)
 }
 
+/** Get a list of all things near point x, y inside a given radius r */
+export function getThingsNear (x, y, r = 64) {
+  return scene.spatialHash.query(x - r, y - r, 2 * r, 2 * r)
+}
+
 /** Given a 2D or 3D axis-aligned bounding box and a 2D or 3D
   * position, get a list of all Things inside it. */
 export function getThingsInAabb (aabb, position = [0, 0, 0]) {
