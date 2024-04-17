@@ -42,6 +42,19 @@ export const mouse = {
 
   getStyle () {
     return document.body.style.cursor
+  },
+
+  reset () {
+    this.position[0] = 0
+    this.position[1] = 0
+    this.delta[0] = 0
+    this.delta[1] = 0
+    this.scrollDelta[0] = 0
+    this.scrollDelta[1] = 0
+    this.leftButton = false
+    this.rightButton = false
+    this.leftClick = false
+    this.rightClick = false
   }
 }
 
@@ -280,6 +293,7 @@ function loseFocus () {
     sound.wasPlayingWhenFocused = !sound.paused
     sound.pause()
   }
+  mouse.reset()
 }
 
 function gainFocus () {
@@ -289,6 +303,7 @@ function gainFocus () {
       sound.play()
     }
   }
+  mouse.reset()
 }
 
 // Handle tabbing in / out of the game
@@ -325,7 +340,9 @@ function handleSceneChange () {
     scene = new Scene()
   }
   nextScene()
-  getCamera3D().setUniforms()
+  if (document.querySelector('#canvas3D')) {
+    getCamera3D().setUniforms()
+  }
   lastScene = nextScene
   nextScene = null
 }
@@ -398,6 +415,20 @@ window.onbeforeunload = (event) => {
 window.oncontextmenu = (event) => {
   event.preventDefault()
 }
+
+// Add CTRL-R reload ability when in NWJS
+try {
+  // Try to focus the NWJS window, so that this event listener only
+  // gets registered when in NWJS
+  const win = nw.Window.get()
+  win.focus()
+
+  document.addEventListener('keydown', event => {
+    if (event.code === 'KeyR' && event.ctrlKey) {
+      window.location.reload()
+    }
+  })
+} catch (e) { }
 
 /******************************************************************************
     Scene management

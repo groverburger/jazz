@@ -112,7 +112,11 @@ export function randomizer (seed = 0) {
   }
 }
 
-export const random = randomizer()
+export let random = randomizer()
+
+export function setSeed (seed) {
+  random = randomizer(seed)
+}
 
 export function choose (elements, rand = random) {
   const value = rand() * elements.length
