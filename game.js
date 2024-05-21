@@ -144,24 +144,30 @@ export function setCanvas3D (canvas, glOptions = {}) {
   return canvas
 }
 
-export function createCanvas2D (parent = document.body) {
+export function createCanvas2D (options = {}) {
   const canvas = document.createElement('canvas')
   canvas.width = width
   canvas.height = height
   canvas.id = 'canvas2D'
   canvas.style = canvasStyle
-  parent.appendChild(canvas)
-  setCanvas2D(canvas)
+  ;(options.parent || document.body).appendChild(canvas)
+  if (options.setCanvas ?? true) {
+    setCanvas2D(canvas)
+  }
+  return canvas
 }
 
-export function createCanvas3D (parent = document.body) {
+export function createCanvas3D (options = {}) {
   const canvas = document.createElement('canvas')
   canvas.width = width
   canvas.height = height
   canvas.id = 'canvas3D'
   canvas.style = canvasStyle
-  parent.appendChild(canvas)
-  setCanvas3D(canvas)
+  ;(options.parent || document.body).appendChild(canvas)
+  if (options.setCanvas ?? true) {
+    setCanvas3D(canvas, options)
+  }
+  return canvas
 }
 
 /** Create and set up the 2D and 3D canvases */

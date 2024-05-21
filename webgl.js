@@ -24,6 +24,8 @@ const defaultVertexFormat = [
 ]
 
 export const defaultVertSource = `
+precision mediump float;
+
 attribute vec4 vertexPosition;
 attribute vec2 vertexTexture;
 attribute vec3 vertexNormal;
@@ -61,8 +63,6 @@ void main() {
 }
 `
 
-export let defaultShader
-
 export const shadedDefaultFragSource = `
 precision mediump float;
 
@@ -81,9 +81,37 @@ void main() {
 }
 `
 
-export let shadedDefaultShader
+export const billboardVertSource = `
+attribute vec4 vertexPosition;
+attribute vec2 vertexTexture;
+attribute vec3 vertexNormal;
 
-export function setGlContext (gl) {
+uniform mat4 projectionMatrix;
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrix;
+
+varying vec2 uv;
+varying vec3 normal;
+
+void main() {
+  normal = (modelMatrix * vec4(vertexNormal.xyz, 1.0)).xyz;
+  uv = vertexTexture;
+
+  vec4 position = vertexPosition;
+  position += (vertexTexture.x*-2.0 +1.0) * vec4(viewMatrix[0].x, viewMatrix[1].x, viewMatrix[2].x, 0.0) * vertexNormal.x;
+  position += (vertexTexture.y*-2.0 +1.0) * vec4(viewMatrix[0].y, viewMatrix[1].y, viewMatrix[2].y, 0.0) * vertexNormal.x;
+
+  gl_Position = projectionMatrix * viewMatrix * modelMatrix * position;
+}
+`
+
+export let defaultShader
+export let shadedDefaultShader
+export let billboardShader
+
+export let defaultTexture
+
+export async function setGlContext (gl) {
   glContext = gl
   defaultShader ||= createShader(
     defaultVertSource,
@@ -93,7 +121,13 @@ export function setGlContext (gl) {
     defaultVertSource,
     shadedDefaultFragSource
   )
-  setShader(defaultShader)
+  billboardShader ||= createShader(
+    billboardVertSource,
+    defaultFragSource
+  )
+  defaultTexture ||= createTexture(await createBlankImage())
+  setShader()
+  setTexture()
 }
 
 export function getGlContext () {
@@ -156,7 +190,7 @@ export function set (name, value, kind = 'float') {
   gl.uniform1f(uniformLocation, value)
 }
 
-export function setShader (shader, skipUniforms = false) {
+export function setShader (shader = defaultShader, skipUniforms = false) {
   const gl = getGlContext()
   const changedShader = currentShader !== shader
   currentShader = shader
@@ -173,8 +207,9 @@ export function getShader () {
   return currentShader
 }
 
-export function setTexture (texture, index = 0) {
+export function setTexture (texture = null, index = 0) {
   const gl = getGlContext()
+  texture = texture || defaultTexture
   gl.activeTexture(gl['TEXTURE' + index])
   gl.bindTexture(gl.TEXTURE_2D, texture)
   gl.activeTexture(gl.TEXTURE0)
@@ -256,10 +291,10 @@ let quadMesh
 
 export function drawBillboard () {
   billboardMesh = billboardMesh || createMesh([
-    0, 0, 0, 0, 0, 1, 0, 0,
+    0, 0, 0, 1, 1, 1, 0, 0,
     0, 0, 0, 1, 0, 1, 0, 0,
     0, 0, 0, 0, 1, 1, 0, 0,
-    0, 0, 0, 1, 1, 1, 0, 0
+    0, 0, 0, 0, 0, 1, 0, 0
   ])
   drawMesh(billboardMesh, 'triangle_strip')
 }
@@ -348,6 +383,10 @@ export function createShader (vsSource, fsSource) {
     vsSource = defaultVertSource
   }
 
+  if (typeof vsSource !== 'string' || typeof fsSource !== 'string') {
+    throw new Error('Shader source is not a string!')
+  }
+
   const gl = getGlContext()
   function compileShader (what, source) {
     const shader = gl.createShader(what)
@@ -393,6 +432,12 @@ export function createTexture (image, filter = 'nearest', edgeClamp = false) {
       mag: filter
     }
   }
+  if (Array.isArray(filter)) {
+    filter = {
+      min: filter[0],
+      mag: filter[1]
+    }
+  }
 
   if (!image) console.error(`No image provided! Got ${image} instead!`)
   const texture = gl.createTexture()
@@ -433,8 +478,15 @@ export function createTexture (image, filter = 'nearest', edgeClamp = false) {
  * Creates a new mesh object and initializes it with the specified vertices.
  */
 export function createMesh (
-  verts,
-  { isStreamed = false, format = defaultVertexFormat } = {}
+  verts = [
+    0, 0, 0, 0, 0, 1, 0, 0,
+    0, 0, 1, 0, 1, 1, 0, 0,
+    1, 0, 0, 1, 0, 1, 0, 0
+  ],
+  {
+    isStreamed = false,
+    format = defaultVertexFormat
+  } = {}
 ) {
   const gl = getGlContext()
   if (typeof verts === 'string') {
@@ -546,9 +598,9 @@ export function clearFramebuffer (framebuffer = null) {
   setFramebuffer(lastFramebuffer)
 }
 
-export function clearScreen () {
+export function clearScreen (color = [0.25, 0.5, 1, 1]) {
   const gl = getGlContext()
-  gl.clearColor(0.25, 0.5, 1, 1)
+  gl.clearColor(...color)
   gl.clearDepth(1.0)
   gl.enable(gl.DEPTH_TEST)
   gl.depthFunc(gl.LEQUAL)
@@ -662,4 +714,19 @@ export function loadObj (fileString, options = {}) {
   }
 
   return objects
+}
+
+async function createBlankImage () {
+  const canvas = document.createElement('canvas')
+  canvas.width = 16
+  canvas.height = 16
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = 'white'
+  ctx.fillRect(0, 0, 16, 16)
+  const image = new Image()
+  image.src = canvas.toDataURL('image/png')
+  await new Promise(resolve => {
+    image.onload = resolve
+  })
+  return image
 }
