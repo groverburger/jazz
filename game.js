@@ -451,6 +451,11 @@ export function setScene (initFunction) {
   // the canvases
   if (!requestedAnimationFrame) {
     requestedAnimationFrame = true
+
+    // The 2D canvas is required to exist, as lots of assumptions rely
+    // on it
+    if (!canvas2D) { createCanvas2D() }
+
     handleCanvasResize()
     requestAnimationFrame(frame)
     setInterval(() => {
@@ -554,6 +559,14 @@ export async function loadText (locations) {
     ])
   }
   return Object.fromEntries(results)
+}
+
+export function loadTexturesFromImages (textures, filter = '') {
+  return Object.fromEntries(
+    Object.entries(textures).map(([name, image]) => (
+      [name, gfx.createTexture(image, filter)]
+    ))
+  )
 }
 
 /******************************************************************************
