@@ -1,4 +1,4 @@
-# Jazz v0.0.1
+# Jazz
 
 Jazz is a framework for rapidly develping games and multimedia applications in HTML5 and JavaScript.
 

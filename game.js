@@ -16,10 +16,13 @@ export const keysPressed = {}
 
 export const mouse = {
   position: [0, 0],
-  delta: [0, 0],
+  delta: [0, 0], // In canvas pixel units
+  rawDelta: [0, 0], // In screen pixel units, good for 3D games
   scrollDelta: [0, 0],
   leftButton: false,
   leftClick: false,
+  middleButton: false,
+  middleClick: false,
   rightButton: false,
   rightClick: false,
 
@@ -49,11 +52,15 @@ export const mouse = {
     this.position[1] = 0
     this.delta[0] = 0
     this.delta[1] = 0
+    this.rawDelta[0] = 0
+    this.rawDelta[1] = 0
     this.scrollDelta[0] = 0
     this.scrollDelta[1] = 0
     this.leftButton = false
+    this.middleButton = false
     this.rightButton = false
     this.leftClick = false
+    this.middleClick = false
     this.rightClick = false
   }
 }
@@ -76,6 +83,7 @@ let width = 1280
 let height = 720
 let preventLeave = false
 let isFramerateUncapped = false
+let isCanvasStyleManipulated = true
 const canvasStyle = `
 position: absolute;
 object-fit: contain;
@@ -126,8 +134,10 @@ export function setCanvas2D (canvas) {
       height,
       true
     )
-    mouse.delta[0] += event.movementX
-    mouse.delta[1] += event.movementY
+    mouse.rawDelta[0] += event.movementX
+    mouse.rawDelta[1] += event.movementY
+    mouse.delta[0] += event.movementX / aspect
+    mouse.delta[1] += event.movementY / aspect
   }
 
   return canvas
@@ -260,9 +270,12 @@ function updateHandler () {
   for (const key in lastKeysDown) delete lastKeysDown[key]
   for (const key in keysDown) lastKeysDown[key] = true
   mouse.leftClick = false
+  mouse.middleClick = false
   mouse.rightClick = false
   mouse.delta[0] = 0
   mouse.delta[1] = 0
+  mouse.rawDelta[0] = 0
+  mouse.rawDelta[1] = 0
   mouse.scrollDelta[0] = 0
   mouse.scrollDelta[1] = 0
 
@@ -355,10 +368,19 @@ function handleSceneChange () {
 
 // Update canvas dimensions if they don't match the internal variables
 function handleCanvasResize () {
+  // NOTE: Canvases with the object fit contain style will stay
+  // letterboxed to the same resolution as the previous width/height,
+  // even when it changes! This is never the desired behavior, so its
+  // style needs to be switched to fill on the frame it is changed and
+  // switched back to contain on the next frame. This also seems to
+  // only matter for the 3D canvas
   if (width !== canvas2D.width || height !== canvas2D.height) {
     canvas2D.width = width
     canvas2D.height = height
     if (canvas3D) {
+      if (isCanvasStyleManipulated) {
+        canvas3D.style.objectFit = 'fill'
+      }
       canvas3D.width = width
       canvas3D.height = height
     }
@@ -366,6 +388,12 @@ function handleCanvasResize () {
     if (gl) {
       gl.viewport(0, 0, width, height)
     }
+  } else if (
+    isCanvasStyleManipulated &&
+    canvas3D &&
+    canvas3D.style.objectFit === 'fill'
+  ) {
+    canvas3D.style.objectFit = 'contain'
   }
 }
 
@@ -394,6 +422,7 @@ document.addEventListener('keyup', (event) => {
 document.addEventListener('mouseup', (event) => {
   mouse.leftButton = event.buttons & 1
   mouse.rightButton = event.buttons & 2
+  mouse.middleButton = event.buttons & 4
 })
 
 document.addEventListener('mousedown', (event) => {
@@ -401,6 +430,8 @@ document.addEventListener('mousedown', (event) => {
   mouse.leftClick = event.buttons & 1
   mouse.rightButton = event.buttons & 2
   mouse.rightClick = event.buttons & 2
+  mouse.middleButton = event.buttons & 4
+  mouse.middleClick = event.buttons & 4
 })
 
 document.addEventListener('wheel', (event) => {
@@ -607,6 +638,15 @@ export function getPreventLeave () {
 export function setPreventLeave (pl) {
   preventLeave = pl
   return preventLeave
+}
+
+export function getIsCanvasStyleManipulated () {
+  return isCanvasStyleManipulated
+}
+
+export function setIsCanvasStyleManipulated (manipulated) {
+  isCanvasStyleManipulated = manipulated
+  return isCanvasStyleManipulated
 }
 
 /*

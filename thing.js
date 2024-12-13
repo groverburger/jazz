@@ -55,8 +55,12 @@ export default class Thing {
 
   onUnload () {}
 
-  setTimer (time, action, name = crypto.randomUUID()) {
+  setTimer (name, time, action) {
     this.#timers[name] = { time, start: time, action }
+  }
+
+  after (time, action) {
+    this.setTimer(crypto.randomUUID(), time, action)
   }
 
   getTimerStartingTime (name) {
@@ -73,12 +77,12 @@ export default class Thing {
     return name in this.#timers
   }
 
-  getTimerFrames (name) {
+  getTimer (name) {
     if (!this.#timers[name]) return 0
     return this.#timers[name].start - this.#timers[name].time
   }
 
-  getTimer (name) {
+  getTimerProgress (name) {
     if (!this.#timers[name]) return 0
     return 1 - this.#timers[name].time / this.#timers[name].start
   }
