@@ -77,7 +77,7 @@ export default class Thing {
     return name in this.#timers
   }
 
-  getTimer (name) {
+  getTimerFrames (name) {
     if (!this.#timers[name]) return 0
     return this.#timers[name].start - this.#timers[name].time
   }
