@@ -291,6 +291,14 @@ export function octaveNoise (x, y = 0, z = 0, octaves = 4) {
   return value / total
 }
 
+// Give time in seconds
+export function toTimeString (time, precision = 1) {
+  time = time | 0
+  const seconds = time % 60
+  const minutes = time / 60 | 0
+  return minutes + (seconds < 10 ? ':0' : ':') + seconds.toFixed(precision)
+}
+
 /********************************************************************************
 Spatial Grid
 ********************************************************************************/
