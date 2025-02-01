@@ -70,7 +70,7 @@ let scene
 let nextScene
 let lastScene
 let previousFrameTime = null
-let accumulator = 0
+let accumulator = 0.99
 let frameCount = 0
 let isFocused = true
 let requestedAnimationFrame = false
@@ -197,7 +197,7 @@ function frame (frameTime) {
   // Fuzzy delta time to account for monitors not always being 60Hz
   delta *= 60
   if (delta >= 0.98 && delta <= 1.02) {
-    delta = 1
+    //delta = 1
   }
   delta *= updateSpeed
 
@@ -236,6 +236,21 @@ function frame (frameTime) {
     frameCount += 1
   }
 
+  // Update the last keys down
+  if (rerender) {
+    for (const key in lastKeysDown) delete lastKeysDown[key]
+    for (const key in keysDown) lastKeysDown[key] = true
+    mouse.leftClick = false
+    mouse.middleClick = false
+    mouse.rightClick = false
+    mouse.delta[0] = 0
+    mouse.delta[1] = 0
+    mouse.rawDelta[0] = 0
+    mouse.rawDelta[1] = 0
+    mouse.scrollDelta[0] = 0
+    mouse.scrollDelta[1] = 0
+  }
+
   requestAnimationFrame(frame)
 }
 
@@ -265,19 +280,6 @@ function updateHandler () {
     update()
   }
   soundmanager.update()
-
-  // Update the last keys down
-  for (const key in lastKeysDown) delete lastKeysDown[key]
-  for (const key in keysDown) lastKeysDown[key] = true
-  mouse.leftClick = false
-  mouse.middleClick = false
-  mouse.rightClick = false
-  mouse.delta[0] = 0
-  mouse.delta[1] = 0
-  mouse.rawDelta[0] = 0
-  mouse.rawDelta[1] = 0
-  mouse.scrollDelta[0] = 0
-  mouse.scrollDelta[1] = 0
 
   // Successfully updated, we should rerender
   return true
@@ -316,7 +318,7 @@ function loseFocus () {
 }
 
 function gainFocus () {
-  accumulator = 0
+  accumulator = 0.99
   for (const sound of Object.values(assets.sounds || {})) {
     if (sound.wasPlayingWhenFocused) {
       sound.play()
@@ -336,7 +338,6 @@ function handleTabbingInAndOut () {
     gainFocus()
   }
   isFocused = focused
-  accumulator = 0
 }
 
 function handleSceneChange () {
@@ -364,6 +365,7 @@ function handleSceneChange () {
   }
   lastScene = nextScene
   nextScene = null
+  accumulator = 0.99
 }
 
 // Update canvas dimensions if they don't match the internal variables
