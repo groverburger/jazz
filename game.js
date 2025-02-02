@@ -377,6 +377,7 @@ function handleCanvasResize () {
   // switched back to contain on the next frame. This also seems to
   // only matter for the 3D canvas
   if (width !== canvas2D.width || height !== canvas2D.height) {
+    accumulator = 0.99
     canvas2D.width = width
     canvas2D.height = height
     if (canvas3D) {
