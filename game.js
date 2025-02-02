@@ -233,6 +233,8 @@ function frame (frameTime) {
     if (document.hasFocus()) {
       draw()
     }
+    mouse.rawDelta[0] = 0
+    mouse.rawDelta[1] = 0
     frameCount += 1
   }
 
@@ -245,8 +247,6 @@ function frame (frameTime) {
     mouse.rightClick = false
     mouse.delta[0] = 0
     mouse.delta[1] = 0
-    mouse.rawDelta[0] = 0
-    mouse.rawDelta[1] = 0
     mouse.scrollDelta[0] = 0
     mouse.scrollDelta[1] = 0
   }
